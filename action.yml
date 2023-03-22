@@ -3,6 +3,9 @@ name: Create Git Tag
 description: Create Git Tag
 
 inputs:
+  DEPLOY_ENV:
+    required: true
+    description: Set Enviroment to deploy
   SSH_PRIV_KEY_LIBRARY:
     required: true
     description: SSH Private Key Library
@@ -60,7 +63,7 @@ runs:
     - name: Deploy latest tag ${{github.event.repository.name}} - ${{ steps.release-branch-finder.outputs.release-branch }}
       run: |
         echo $ATAR_CREDENTIALS|gcloud auth activate-service-account --key-file=-
-        ${RETRY} gcloud -q --project=${ATAR_PROJECT} app deploy app.dev.yaml -v=${{env.BRANCH}} --promote
+        ${RETRY} gcloud -q --project=${ATAR_PROJECT} app deploy app.${{ inputs.DEPLOY_ENV }}.yaml -v=${{env.BRANCH}} --promote
       shell: bash
 
     - name: Create TAR release
