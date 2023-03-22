@@ -30,7 +30,7 @@ runs:
 
     - name: Set Vars
       run: |
-        echo "MESSAGE=$(echo '${{github.event.head_commit.message}}'|head -n 1)" >> $GITHUB_ENV
+        # echo "MESSAGE=$(echo '${{github.event.head_commit.message}}'|head -n 1)" >> $GITHUB_ENV
         echo "CURRENT_DATE=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_ENV
         echo "BRANCH="${{ steps.release-branch-finder.outputs.release-branch }} | cut -c 11-"" >> $GITHUB_ENV
         echo $BRANCH
