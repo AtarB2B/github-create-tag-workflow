@@ -25,74 +25,70 @@ runs:
         repo-token: ${{ inputs.GITHUB_TOKEN }}
         release-branch-prefix: rc
 
-    - name: Echo Latest Release Branch
-      run: echo "${{ steps.release-branch-finder.outputs.release-branch }}"
+    - name: Set Vars
+      run: |
+        echo "MESSAGE=$(echo '${{github.event.head_commit.message}}'|head -n 1)" >> $GITHUB_ENV
+        echo "CURRENT_DATE=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_ENV
+        echo "BRANCH="${{ steps.release-branch-finder.outputs.release-branch }}"" >> $GITHUB_ENV
       shell: bash
 
-    # - name: Set Vars
-    #   run: |
-    #     echo "MESSAGE=$(echo '${{github.event.head_commit.message}}'|head -n 1)" >> $GITHUB_ENV
-    #     echo "CURRENT_DATE=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_ENV
-    #     echo "BRANCH=rc/"${{ steps.versioning.outputs.version }}"" >> $GITHUB_ENV
-    #   shell: bash
-
-    # - name: Create GH Release
-    #   id: create_release
-    #   uses: actions/create-release@v1
-    #   with:
-    #     tag_name: "${{ steps.versioning.outputs.version }}"
-    #     release_name: Release "${{ steps.versioning.outputs.version }}"
-    #     commitish: ${{env.BRANCH}}
-    #     body: |
-    #       Changes in this Release
-    #       - Release from: ${{env.BRANCH}}
-    #       - Release date: ${{env.CURRENT_DATE}}
-    #       - Commit: ${{github.sha}}
-    #       - Commit Message: ${{env.MESSAGE}}
-    #     draft: false
-    #     prerelease: true
+    - name: Create GH Release
+      id: create_release
+      uses: actions/create-release@v1
+      with:
+        tag_name: "${{ steps.release-branch-finder.outputs.release-branch }}"
+        release_name: Release "${{ steps.release-branch-finder.outputs.release-branch }}"
+        commitish: ${{env.BRANCH}}
+        body: |
+          Changes in this Release
+          - Release from: ${{env.BRANCH}}
+          - Release date: ${{env.CURRENT_DATE}}
+          - Commit: ${{github.sha}}
+          - Commit Message: ${{env.MESSAGE}}
+        draft: false
+        prerelease: true
     
-    # - name: Send Message to Slack
-    #   uses: 8398a7/action-slack@v3
-    #   with:
-    #     status: ${{job.status}}
-    #     username: "CREATE_TAG|${{github.event.repository.name}}| ${{ steps.versioning.outputs.version }}"
-    #     author_name: ${{github.workflow}}
-    #     fields: repo,message,commit,author,action,eventName,ref,workflow,job,took,pullRequest
-    #   if: always()
+    - name: Send Message to Slack
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{job.status}}
+        username: "CREATE_TAG|${{github.event.repository.name}}| ${{ steps.release-branch-finder.outputs.release-branch }}"
+        author_name: ${{github.workflow}}
+        fields: repo,message,commit,author,action,eventName,ref,workflow,job,took,pullRequest
+      if: always()
 
-    # - name: Deploy latest tag ${{github.event.repository.name}} - ${{ steps.versioning.outputs.version }}
-    #   run: |
-    #     echo $ATAR_CREDENTIALS|gcloud auth activate-service-account --key-file=-
-    #     ${RETRY} gcloud -q --project=${ATAR_PROJECT} app deploy app.dev.yaml -v=${{ steps.versioning.outputs.version }} --promote
-    #   shell: bash
+    - name: Deploy latest tag ${{github.event.repository.name}} - ${{ steps.release-branch-finder.outputs.release-branch }}
+      run: |
+        echo $ATAR_CREDENTIALS|gcloud auth activate-service-account --key-file=-
+        ${RETRY} gcloud -q --project=${ATAR_PROJECT} app deploy app.dev.yaml -v=${{ steps.release-branch-finder.outputs.release-branch }} --promote
+      shell: bash
 
-    # - name: Create TAR release
-    #   run: atar-cli --tar -n=${{github.event.repository.name}}-${{ steps.versioning.outputs.version }}
-    #   shell: bash
+    - name: Create TAR release
+      run: atar-cli --tar -n=${{github.event.repository.name}}-${{ steps.release-branch-finder.outputs.release-branch }}
+      shell: bash
 
-    # - name: Upload Release Asset
-    #   run: ${RETRY} gh release upload ${{ steps.versioning.outputs.version }} ${{github.event.repository.name}}-${{ steps.versioning.outputs.version }}.tar.gz
-    #   shell: bash
+    - name: Upload Release Asset
+      run: ${RETRY} gh release upload ${{ steps.release-branch-finder.outputs.release-branch }} ${{github.event.repository.name}}-${{ steps.release-branch-finder.outputs.release-branch }}.tar.gz
+      shell: bash
 
-    # - name: Send Message to Slack
-    #   uses: 8398a7/action-slack@v3
-    #   with:
-    #     status: ${{job.status}}
-    #     username: "DEPLOY_RC|${{github.event.repository.name}}|${{ steps.versioning.outputs.version }}"
-    #     author_name: ${{github.workflow}}
-    #     fields: repo,message,commit,author,action,eventName,ref,workflow,job,took,pullRequest
-    #   if: always()
+    - name: Send Message to Slack
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{job.status}}
+        username: "DEPLOY_RC|${{github.event.repository.name}}|${{ steps.release-branch-finder.outputs.release-branch }}"
+        author_name: ${{github.workflow}}
+        fields: repo,message,commit,author,action,eventName,ref,workflow,job,took,pullRequest
+      if: always()
 
-    # - name: Create PR to main
-    #   run: gh pr create --base=main --head=rc/${{ steps.versioning.outputs.version }}" --title="[Release] version ${{ steps.versioning.outputs.version }} to production" --body="Pull Request ${{ steps.versioning.outputs.version }} to Production"
-    #   shell: bash
+    - name: Create PR to main
+      run: gh pr create --base=main --head=${{ steps.release-branch-finder.outputs.release-branch }}" --title="[Release] version ${{ steps.release-branch-finder.outputs.release-branch }} to production" --body="Pull Request ${{ steps.release-branch-finder.outputs.release-branch }} to Production"
+      shell: bash
       
-    # - name: Send Message to Slack
-    #   uses: 8398a7/action-slack@v3
-    #   with:
-    #     status: ${{job.status}}
-    #     username: "CREATE_PR|${{github.event.repository.name}}|${{ steps.versioning.outputs.version }}"
-    #     author_name: ${{github.workflow}}
-    #     fields: repo,message,commit,author,action,eventName,ref,workflow,job,took,pullRequest
-    #   if: always()
+    - name: Send Message to Slack
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{job.status}}
+        username: "CREATE_PR|${{github.event.repository.name}}|${{ steps.release-branch-finder.outputs.release-branch }}"
+        author_name: ${{github.workflow}}
+        fields: repo,message,commit,author,action,eventName,ref,workflow,job,took,pullRequest
+      if: always()
