@@ -6,6 +6,9 @@ inputs:
   SSH_PRIV_KEY_LIBRARY:
     required: true
     description: SSH Private Key Library
+  GITHUB_TOKEN:
+    required: true
+    description: token
 
 runs:
   using: "composite"
@@ -19,7 +22,7 @@ runs:
       id: release-branch-finder
       uses: jsryudev/release-branch-finder@v0.1.0
       with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        repo-token: ${{ inputs.GITHUB_TOKEN }}
         release-branch-prefix: rc
 
     - name: Echo Latest Release Branch
