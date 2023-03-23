@@ -40,6 +40,20 @@ runs:
         echo "BRANCH="${{ steps.release-branch-finder.outputs.release-branch }}"" >> $GITHUB_ENV
       shell: bash
 
+    - name: Deploy latest tag ${{github.event.repository.name}} - ${{ steps.release-branch-finder.outputs.release-branch }}
+      run: |
+        echo "${{ inputs.ATAR_CREDENTIALS }}"|gcloud auth activate-service-account --key-file=-
+        ${RETRY} gcloud -q --project="${{ inputs.ATAR_PROJECT }}" app deploy app.${{ inputs.DEPLOY_ENV }}.yaml -v=newpipeline --promote
+      shell: bash
+
+    - name: Create TAR release
+      run: atar-cli --tar -n=${{github.event.repository.name}}-${{ steps.release-branch-finder.outputs.release-branch }}
+      shell: bash
+
+    - name: Upload Release Asset
+      run: ${RETRY} gh release upload ${{ steps.release-branch-finder.outputs.release-branch }} ${{github.event.repository.name}}-${{ steps.release-branch-finder.outputs.release-branch }}.tar.gz
+      shell: bash
+
     - name: Create GH Release
       id: create_release
       uses: actions/create-release@v1
@@ -52,51 +66,9 @@ runs:
           - Release from: ${{env.BRANCH}}
           - Release date: ${{env.CURRENT_DATE}}
           - Commit: ${{github.sha}}
-          - Commit Message: "TESTE"
         draft: false
         prerelease: true
-    
-    # - name: Send Message to Slack
-    #   uses: 8398a7/action-slack@v3
-    #   with:
-    #     status: ${{job.status}}
-    #     username: "CREATE_TAG|${{github.event.repository.name}}| ${{ steps.release-branch-finder.outputs.release-branch }}"
-    #     author_name: ${{github.workflow}}
-    #     fields: repo,message,commit,author,action,eventName,ref,workflow,job,took,pullRequest
-    #   if: always()
-
-    - name: Deploy latest tag ${{github.event.repository.name}} - ${{ steps.release-branch-finder.outputs.release-branch }}
-      run: |
-        echo ${{ inputs.ATAR_CREDENTIALS }}|gcloud auth activate-service-account --key-file=-
-        ${RETRY} gcloud -q --project=${{ inputs.ATAR_PROJECT }} app deploy app.${{ inputs.DEPLOY_ENV }}.yaml -v=newpipeline --promote
-      shell: bash
-
-    - name: Create TAR release
-      run: atar-cli --tar -n=${{github.event.repository.name}}-${{ steps.release-branch-finder.outputs.release-branch }}
-      shell: bash
-
-    - name: Upload Release Asset
-      run: ${RETRY} gh release upload ${{ steps.release-branch-finder.outputs.release-branch }} ${{github.event.repository.name}}-${{ steps.release-branch-finder.outputs.release-branch }}.tar.gz
-      shell: bash
-
-    # - name: Send Message to Slack
-    #   uses: 8398a7/action-slack@v3
-    #   with:
-    #     status: ${{job.status}}
-    #     username: "DEPLOY_RC|${{github.event.repository.name}}|${{ steps.release-branch-finder.outputs.release-branch }}"
-    #     author_name: ${{github.workflow}}
-    #     fields: repo,message,commit,author,action,eventName,ref,workflow,job,took,pullRequest
-    #   if: always()
 
     - name: Create PR to main
       run: gh pr create --base=main --head=${{ steps.release-branch-finder.outputs.release-branch }}" --title="[Release] version ${{ steps.release-branch-finder.outputs.release-branch }} to production" --body="Pull Request ${{ steps.release-branch-finder.outputs.release-branch }} to Production"
       shell: bash
-      
-    # - name: Send Message to Slack
-    #   uses: 8398a7/action-slack@v3
-    #   with:
-    #     status: ${{job.status}}
-    #     username: "CREATE_PR|${{github.event.repository.name}}|${{ steps.release-branch-finder.outputs.release-branch }}"
-    #     author_name: ${{github.workflow}}
-    #     fields: repo,message,commit,author,action,eventName,ref,workflow,job,took,pullRequest
-    #   if: always()
