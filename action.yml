@@ -49,15 +49,15 @@ runs:
       shell: bash
 
     - name: Upload Release Asset
-      run: ${RETRY} gh release upload ${{ steps.release-branch-finder.outputs.release-branch }} ${{github.event.repository.name}}-${{ steps.release-branch-finder.outputs.release-branch }}.tar.gz
+      run: ${RETRY} gh release upload ${{env.BRANCH}} ${{github.event.repository.name}}-${{env.BRANCH}}.tar.gz
       shell: bash
 
     - name: Create GH Release
       id: create_release
       uses: actions/create-release@v1
       with:
-        tag_name: "${{ steps.release-branch-finder.outputs.release-branch }}"
-        release_name: Release "${{ steps.release-branch-finder.outputs.release-branch }}"
+        tag_name: "${{env.BRANCH}}"
+        release_name: Release "${{env.BRANCH}}"
         commitish: ${{env.BRANCH}}
         body: |
           Changes in this Release
