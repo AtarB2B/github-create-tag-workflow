@@ -32,15 +32,18 @@ runs:
       run: |
         echo "CURRENT_DATE=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_ENV
         echo "BRANCH="$(echo ${{ steps.release-branch-finder.outputs.release-branch }} | cut -c 4-)"" >> $GITHUB_ENV
-        echo $BRANCH
       shell: bash
 
     - name: GCloud Deploy
-      run: echo ${ATAR_CREDENTIALS_DEV}|gcloud auth activate-service-account --key-file=-
+      run: |
+        echo ${ATAR_CREDENTIALS_DEV}|gcloud auth activate-service-account --key-file=-
       shell: bash
     
     - name: Deploy ${{github.event.repository.name}}
-      run: ${RETRY} gcloud -q --project=${ATAR_PROJECT_DEV} app deploy app.${{ inputs.DEPLOY_ENV }}.yaml -v=newpipeline --no-promote
+      run: |
+        OLD_TAG=${{env.BRANCH}} 
+        TAG="${OLD_TAG//./-}"
+        ${RETRY} gcloud -q --project=${ATAR_PROJECT_DEV} app deploy app.${{ inputs.DEPLOY_ENV }}.yaml -v=$TAG --no-promote
       shell: bash
 
     - name: Create TAR release
@@ -52,12 +55,12 @@ runs:
       id: create_release
       uses: actions/create-release@v1
       with:
-        tag_name: "${{env.BRANCH}}"
-        release_name: Release "${{env.BRANCH}}"
-        commitish: ${{env.BRANCH}}
+        tag_name: ${{env.BRANCH}}
+        release_name: Release "${{env.BRANCH}}
+        commitish: ${{ steps.release-branch-finder.outputs.release-branch }}
         body: |
           Changes in this Release
-          - Release from: ${{env.BRANCH}}
+          - Release from: ${{ steps.release-branch-finder.outputs.release-branch }}
           - Release date: ${{env.CURRENT_DATE}}
           - Commit: ${{github.sha}}
         draft: false
