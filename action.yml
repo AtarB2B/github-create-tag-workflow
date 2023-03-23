@@ -49,7 +49,9 @@ runs:
       shell: bash
 
     - name: Upload Release Asset
-      run: ${RETRY} gh release upload ${{env.BRANCH}} ${{github.event.repository.name}}-${{env.BRANCH}}.tar.gz
+      run: |
+        chown -R $(id -u):$(id -g) $PWD
+        ${RETRY} gh release upload ${{env.BRANCH}} ${{github.event.repository.name}}-${{env.BRANCH}}.tar.gz
       shell: bash
 
     - name: Create GH Release
