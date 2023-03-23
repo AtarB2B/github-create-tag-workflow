@@ -48,12 +48,6 @@ runs:
         atar-cli --tar -n=${{github.event.repository.name}}-${{env.BRANCH}}
       shell: bash
 
-    - name: Upload Release Asset
-      run: |
-        chown -R $(id -u):$(id -g) $PWD
-        ${RETRY} gh release upload ${{env.BRANCH}} ${{github.event.repository.name}}-${{env.BRANCH}}.tar.gz
-      shell: bash
-
     - name: Create GH Release
       id: create_release
       uses: actions/create-release@v1
@@ -68,6 +62,12 @@ runs:
           - Commit: ${{github.sha}}
         draft: false
         prerelease: true
+
+    - name: Upload Release Asset
+      run: |
+        chown -R $(id -u):$(id -g) $PWD
+        ${RETRY} gh release upload ${{env.BRANCH}} ${{github.event.repository.name}}-${{env.BRANCH}}.tar.gz
+      shell: bash
 
     - name: Create PR to main
       run: gh pr create --base=main --head=${{ steps.release-branch-finder.outputs.release-branch }}" --title="[Release] version ${{ steps.release-branch-finder.outputs.release-branch }} to production" --body="Pull Request ${{ steps.release-branch-finder.outputs.release-branch }} to Production"
