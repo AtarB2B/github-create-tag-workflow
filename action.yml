@@ -64,7 +64,7 @@ runs:
           - Release date: ${{env.CURRENT_DATE}}
           - Commit: ${{github.sha}}
         draft: false
-        prerelease: true
+        prerelease: false
 
     - name: Upload Release Asset
       run: |
