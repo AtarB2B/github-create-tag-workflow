@@ -80,7 +80,7 @@ runs:
           - Release date: ${{env.CURRENT_DATE}}
           - Commit: ${{github.sha}}
         draft: false
-        prerelease: "${{ github.ref != 'refs/heads/main' ? 'true' : 'false' }}"
+        prerelease: false
 
     - name: Upload Release Asset
       run: |
