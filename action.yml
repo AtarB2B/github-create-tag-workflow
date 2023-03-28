@@ -28,7 +28,7 @@ runs:
     - name: Check Credentials and Project
       id: project_credential
       run: |
-        if [[ ${{ inputs.DEPLOY_ENV }} == 'dev']]
+        if [[ (${{ inputs.DEPLOY_ENV }} == 'dev') ]]
         then
             echo "CREDENTIALS=$ATAR_CREDENTIALS_DEV" >> $GITHUB_ENV
             echo "PROJECT=$ATAR_PROJECT_DEV" >> $GITHUB_ENV
@@ -47,44 +47,44 @@ runs:
         echo ${{env.PROJECT}}
       shell: bash
 
-    - name: GCloud Deploy
-      run: |
-        echo ${{steps.project_credential.outputs.CREDENTIALS}}|gcloud auth activate-service-account --key-file=-
-      shell: bash
+    # - name: GCloud Deploy
+    #   run: |
+    #     echo ${{steps.project_credential.outputs.CREDENTIALS}}|gcloud auth activate-service-account --key-file=-
+    #   shell: bash
     
-    - name: Deploy ${{github.event.repository.name}}
-      run: |
-        OLD_TAG=${{env.BRANCH}} 
-        TAG="${OLD_TAG//./-}"
-        ${RETRY} gcloud -q --project=${{steps.project_credential.outputs.PROJECT}} app deploy app.${{ inputs.DEPLOY_ENV }}.yaml -v=$TAG --no-promote
-      shell: bash
+    # - name: Deploy ${{github.event.repository.name}}
+    #   run: |
+    #     OLD_TAG=${{env.BRANCH}} 
+    #     TAG="${OLD_TAG//./-}"
+    #     ${RETRY} gcloud -q --project=${{steps.project_credential.outputs.PROJECT}} app deploy app.${{ inputs.DEPLOY_ENV }}.yaml -v=$TAG --no-promote
+    #   shell: bash
 
-    - name: Create TAR release
-      run: |
-        atar-cli --tar -n=${{github.event.repository.name}}-${{env.BRANCH}}
-      shell: bash
+    # - name: Create TAR release
+    #   run: |
+    #     atar-cli --tar -n=${{github.event.repository.name}}-${{env.BRANCH}}
+    #   shell: bash
 
-    - name: Create GH Release
-      id: create_release
-      uses: actions/create-release@v1
-      with:
-        tag_name: ${{env.BRANCH}}
-        release_name: Release "${{env.BRANCH}}
-        commitish: ${{ steps.release-branch-finder.outputs.release-branch }}
-        body: |
-          Changes in this Release
-          - Release from: ${{ steps.release-branch-finder.outputs.release-branch }}
-          - Release date: ${{env.CURRENT_DATE}}
-          - Commit: ${{github.sha}}
-        draft: false
-        prerelease: false
+    # - name: Create GH Release
+    #   id: create_release
+    #   uses: actions/create-release@v1
+    #   with:
+    #     tag_name: ${{env.BRANCH}}
+    #     release_name: Release "${{env.BRANCH}}
+    #     commitish: ${{ steps.release-branch-finder.outputs.release-branch }}
+    #     body: |
+    #       Changes in this Release
+    #       - Release from: ${{ steps.release-branch-finder.outputs.release-branch }}
+    #       - Release date: ${{env.CURRENT_DATE}}
+    #       - Commit: ${{github.sha}}
+    #     draft: false
+    #     prerelease: false
 
-    - name: Upload Release Asset
-      run: |
-        chown -R $(id -u):$(id -g) $PWD
-        ${RETRY} gh release upload ${{env.BRANCH}} ${{github.event.repository.name}}-${{env.BRANCH}}.tar.gz
-      shell: bash
+    # - name: Upload Release Asset
+    #   run: |
+    #     chown -R $(id -u):$(id -g) $PWD
+    #     ${RETRY} gh release upload ${{env.BRANCH}} ${{github.event.repository.name}}-${{env.BRANCH}}.tar.gz
+    #   shell: bash
 
-    - name: Create PR to main
-      run: gh pr create --base=main --head=${{ steps.release-branch-finder.outputs.release-branch }} --title="[Release] version ${{ steps.release-branch-finder.outputs.release-branch }} to production" --body="Pull Request ${{ steps.release-branch-finder.outputs.release-branch }} to Production"
-      shell: bash
+    # - name: Create PR to main
+    #   run: gh pr create --base=main --head=${{ steps.release-branch-finder.outputs.release-branch }} --title="[Release] version ${{ steps.release-branch-finder.outputs.release-branch }} to production" --body="Pull Request ${{ steps.release-branch-finder.outputs.release-branch }} to Production"
+    #   shell: bash
