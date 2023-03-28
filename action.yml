@@ -28,7 +28,7 @@ runs:
     - name: Check Credentials and Project
       id: project_credential
       run: |
-        if [ ${{ inputs.DEPLOY_ENV }} == 'dev']
+        if [[ ${{ inputs.DEPLOY_ENV }} == 'dev']]
         then
             echo "CREDENTIALS=$ATAR_CREDENTIALS_DEV" >> $GITHUB_ENV
             echo "PROJECT=$ATAR_PROJECT_DEV" >> $GITHUB_ENV
