@@ -8,7 +8,10 @@ inputs:
     description: Set Enviroment to deploy
   GITHUB_TOKEN:
     required: true
-    description: token
+    description: Github Token
+  SVC_NAME:
+    required: true
+    description: Service Name
 
 runs:
   using: "composite"
@@ -54,6 +57,13 @@ runs:
         OLD_TAG=${{env.BRANCH}} 
         TAG="${OLD_TAG//./-}"
         ${RETRY} gcloud -q --project=${{steps.project_credential.outputs.PROJECT}} app deploy app.${{ inputs.DEPLOY_ENV }}.yaml -v=$TAG --no-promote
+      shell: bash
+
+    - name: Set New Traffic
+      run: |
+        OLD_TAG=${{env.BRANCH}} 
+        TAG="${OLD_TAG//./-}"
+        ${RETRY} gcloud app services set-traffic ${{ inputs.SVC_NAME }} --splits $TAG=1 --quiet
       shell: bash
 
     - name: Create TAR release
