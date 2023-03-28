@@ -30,11 +30,11 @@ runs:
       run: |
         if [ ${{ inputs.DEPLOY_ENV }} == 'dev']
         then
-            echo "CREDENTIALS=$ATAR_CREDENTIALS_DEV" >> "$GITHUB_OUTPUT"
-            echo "PROJECT=$ATAR_PROJECT_DEV" >> "$GITHUB_OUTPUT"
+            echo "CREDENTIALS=$ATAR_CREDENTIALS_DEV" >> $GITHUB_ENV
+            echo "PROJECT=$ATAR_PROJECT_DEV" >> $GITHUB_ENV
         else
-            echo "CREDENTIALS=$ATAR_CREDENTIALS" >> "$GITHUB_OUTPUT"
-            echo "PROJECT=$ATAR_PROJECT" >> "$GITHUB_OUTPUT"
+            echo "CREDENTIALS=$ATAR_CREDENTIALS" >> $GITHUB_ENV
+            echo "PROJECT=$ATAR_PROJECT" >> $GITHUB_ENV
         fi
       shell: bash
 
@@ -43,8 +43,8 @@ runs:
         echo "CURRENT_DATE=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_ENV
         echo "BRANCH="$(echo ${{ steps.release-branch-finder.outputs.release-branch }} | cut -c 4-)"" >> $GITHUB_ENV
 
-        echo ${{steps.project_credential.outputs.CREDENTIALS}} 
-        echo ${{steps.project_credential.outputs.PROJECT}} 
+        echo ${{env.CREDENTIALS}}
+        echo ${{env.PROJECT}}
       shell: bash
 
     - name: GCloud Deploy
