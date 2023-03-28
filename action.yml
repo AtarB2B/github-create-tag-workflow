@@ -30,11 +30,11 @@ runs:
       run: |
         if [ ${{ inputs.DEPLOY_ENV }} == 'dev']
         then
-            echo "CREDENTIALS=$ATAR_CREDENTIALS_DEV" >> $GITHUB_OUTPUT
-            echo "PROJECT=$ATAR_PROJECT_DEV" >> $GITHUB_OUTPUT
+            echo "CREDENTIALS=$ATAR_CREDENTIALS_DEV" >> "$GITHUB_OUTPUT"
+            echo "PROJECT=$ATAR_PROJECT_DEV" >> "$GITHUB_OUTPUT"
         else
-            echo "CREDENTIALS=$ATAR_CREDENTIALS" >> $GITHUB_OUTPUT
-            echo "PROJECT=$ATAR_PROJECT" >> $GITHUB_OUTPUT
+            echo "CREDENTIALS=$ATAR_CREDENTIALS" >> "$GITHUB_OUTPUT"
+            echo "PROJECT=$ATAR_PROJECT" >> "$GITHUB_OUTPUT"
         fi
       shell: bash
 
