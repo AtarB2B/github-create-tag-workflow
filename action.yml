@@ -30,16 +30,17 @@ runs:
       run: |
         if [[ (${{ inputs.DEPLOY_ENV }} == 'dev') ]]
         then
-            echo '------------- entrei 1 -------------'
-            echo '::set-output name=CREDENTIALS::3'
+            echo '::set-output name=PROJECT::$ATAR_PROJECT_DEV'
+            echo '::set-output name=CREDENTIALS::$ATAR_CREDENTIALS_DEV'
         else
-            echo '------------- entrei 2 -------------'
-            echo '::set-output name=CREDENTIALS::3'
+            echo '::set-output name=PROJECT::$ATAR_PROJECT'
+            echo '::set-output name=CREDENTIALS::$ATAR_CREDENTIALS'
         fi
       shell: bash
 
     - name: Set Vars
       run: |
+        echo "${{steps.project_credential.outputs.PROJECT}}"
         echo "${{steps.project_credential.outputs.CREDENTIALS}}"
 
         echo "CURRENT_DATE=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_ENV
