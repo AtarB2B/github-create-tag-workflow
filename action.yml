@@ -63,7 +63,7 @@ runs:
       run: |
         OLD_TAG=${{env.BRANCH}} 
         TAG="${OLD_TAG//./-}"
-        ${RETRY} gcloud app services set-traffic ${{ inputs.SVC_NAME }} --splits $TAG=1 --quiet
+        ${RETRY} gcloud --project=${{steps.project_credential.outputs.PROJECT}} app services set-traffic ${{ inputs.SVC_NAME }} --splits $TAG=1 --quiet
       shell: bash
 
     - name: Create TAR release
