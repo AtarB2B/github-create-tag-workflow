@@ -47,24 +47,24 @@ runs:
         echo "BRANCH="$(echo ${{ steps.release-branch-finder.outputs.release-branch }} | cut -c 4-)"" >> $GITHUB_ENV
       shell: bash
 
-    - name: GCloud Deploy
+    - name: GAE Key
       run: |
         echo ${{steps.project_credential.outputs.CREDENTIALS}}|gcloud auth activate-service-account --key-file=-
       shell: bash
     
-    - name: Deploy ${{github.event.repository.name}}
+    - name: GAE Deploy ${{github.event.repository.name}}
       run: |
         OLD_TAG=${{env.BRANCH}} 
         TAG="${OLD_TAG//./-}"
         ${RETRY} gcloud -q --project=${{steps.project_credential.outputs.PROJECT}} app deploy app.${{ inputs.DEPLOY_ENV }}.yaml -v=$TAG --no-promote
       shell: bash
 
-    - name: Set New Traffic
-      run: |
-        OLD_TAG=${{env.BRANCH}} 
-        TAG="${OLD_TAG//./-}"
-        ${RETRY} gcloud --project=${{steps.project_credential.outputs.PROJECT}} app services set-traffic ${{ inputs.SVC_NAME }} --splits $TAG=1 --quiet
-      shell: bash
+    # - name: Set New Traffic
+    #   run: |
+    #     OLD_TAG=${{env.BRANCH}} 
+    #     TAG="${OLD_TAG//./-}"
+    #     ${RETRY} gcloud --project=${{steps.project_credential.outputs.PROJECT}} app services set-traffic ${{ inputs.SVC_NAME }} --splits $TAG=1 --quiet
+    #   shell: bash
 
     - name: Create TAR release
       run: |
