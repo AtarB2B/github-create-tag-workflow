@@ -12,6 +12,9 @@ inputs:
   SVC_NAME:
     required: true
     description: Service Name
+  CREATE_RELEASE:
+    required: true
+    description: Create Release and Tag - Github
 
 runs:
   using: "composite"
@@ -39,6 +42,14 @@ runs:
             echo '::set-output name=PROJECT::$ATAR_PROJECT'
             echo '::set-output name=CREDENTIALS::$ATAR_CREDENTIALS'
         fi
+
+        if [[ (${{ inputs.CREATE_RELEASE }} == 'true') ]]
+        then
+            echo '::set-output name=CREATE_RELEASE::true'
+        else
+            echo '::set-output name=CREATE_RELEASE::false'
+        fi
+        
       shell: bash
 
     - name: Set Vars
@@ -67,11 +78,13 @@ runs:
     #   shell: bash
 
     - name: Create TAR release
+      if: ${{steps.project_credential.outputs.CREATE_RELEASE}} == 'true'
       run: |
         atar-cli --tar -n=${{github.event.repository.name}}-${{env.BRANCH}}
       shell: bash
 
     - name: Create GH Release
+      if: ${{steps.project_credential.outputs.CREATE_RELEASE}} == 'true'
       id: create_release
       uses: actions/create-release@v1
       with:
@@ -87,11 +100,13 @@ runs:
         prerelease: false
 
     - name: Upload Release Asset
+      if: ${{steps.project_credential.outputs.CREATE_RELEASE}} == 'true'
       run: |
         chown -R $(id -u):$(id -g) $PWD
         ${RETRY} gh release upload ${{env.BRANCH}} ${{github.event.repository.name}}-${{env.BRANCH}}.tar.gz
       shell: bash
 
     - name: Create PR to main
+      if: ${{steps.project_credential.outputs.CREATE_RELEASE}} == 'true'
       run: gh pr create --base=main --head=${{ steps.release-branch-finder.outputs.release-branch }} --title="[Release] version ${{ steps.release-branch-finder.outputs.release-branch }} to production" --body="Pull Request ${{ steps.release-branch-finder.outputs.release-branch }} to Production"
       shell: bash
