@@ -15,9 +15,9 @@ inputs:
   CREATE_RELEASE:
     required: true
     description: Create Release and Tag - Github
-  # CLIENT:
-  #   required: true
-  #   description: Clients
+  CLIENT:
+    required: true
+    description: Clients
 
 runs:
   using: "composite"
