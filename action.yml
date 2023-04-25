@@ -15,9 +15,9 @@ inputs:
   CREATE_RELEASE:
     required: true
     description: Create Release and Tag - Github
-  CLIENT:
+  SSH_PRIV_KEY_LIBRARY:
     required: true
-    description: Clients
+    description: SSH_PRIV_KEY_LIBRARY
 
 runs:
   using: "composite"
@@ -69,7 +69,6 @@ runs:
       shell: bash
 
     - name: GAE Key
-      # if: ${{ inputs.CLIENT != 'porto' }}
       run: |
         echo ${{steps.project_credential.outputs.CREDENTIALS}}|gcloud auth activate-service-account --key-file=-
       shell: bash
