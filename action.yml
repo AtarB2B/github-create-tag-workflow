@@ -95,7 +95,7 @@ runs:
       uses: actions/create-release@v1
       with:
         tag_name: ${{env.BRANCH}}
-        release_name: Release "${{env.BRANCH}}
+        release_name: Release ${{env.BRANCH}}
         commitish: ${{ steps.release-branch-finder.outputs.release-branch }}
         body: |
           Changes in this Release
