@@ -40,8 +40,8 @@ runs:
             echo '::set-output name=PROJECT::$ATAR_PROJECT_DEV'
             echo '::set-output name=CREDENTIALS::$ATAR_CREDENTIALS_DEV'
         else
-            echo '::set-output name=PROJECT::$ATAR_PROJECT'
-            echo '::set-output name=CREDENTIALS::$ATAR_CREDENTIALS'
+            echo '::set-output name=PROJECT::$ATAR_ERP_PROJECT_ID'
+            echo '::set-output name=CREDENTIALS::$ATAR_ERP_CREDENTIALS'
         fi
       shell: bash
 
