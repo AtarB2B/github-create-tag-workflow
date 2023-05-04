@@ -130,3 +130,10 @@ runs:
       if: ${{ inputs.CREATE_RELEASE == 'true' }}
       run: gh pr create --base=main --head=${{ steps.release-branch-finder.outputs.release-branch }} --title="[Release] version ${{ steps.release-branch-finder.outputs.release-branch }} to production" --body="Pull Request ${{ steps.release-branch-finder.outputs.release-branch }} to Production"
       shell: bash
+    
+    - name: Delete RC Branch
+      if: ${{ inputs.CREATE_RELEASE == 'false' }}
+      run: |
+        chown -R $(id -u):$(id -g) $PWD
+        git push origin --delete "${{ steps.release-branch-finder.outputs.release-branch }}"
+      shell: bash
