@@ -19,7 +19,7 @@ inputs:
     required: true
     description: SSH_PRIV_KEY_LIBRARY
   RC_BRANCH:
-    required: true
+    required: false
     description: RC_BRANCH
 
 runs:
