@@ -73,7 +73,7 @@ runs:
         then
             OLD_TAG=${{env.BRANCH}} 
             TAG="${OLD_TAG//./-}"
-            retry -l -i=60s -c=3 gcloud -q --project=${{steps.project_credential.outputs.PROJECT}} app deploy app.${{ inputs.DEPLOY_ENV }}.yaml -v=$TAG --no-promote
+            retry -l -i=60s -c=3 gcloud -q --project=${{steps.project_credential.outputs.PROJECT}} app deploy app.${{ inputs.DEPLOY_ENV }}.yaml -v=$TAG --promote
         elif [[ (${{ inputs.DEPLOY_ENV }} == 'prod-atar') ]]
         then
             OLD_TAG=${{env.BRANCH}} 
