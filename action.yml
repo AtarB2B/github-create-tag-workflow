@@ -18,6 +18,9 @@ inputs:
   SSH_PRIV_KEY_LIBRARY:
     required: true
     description: SSH_PRIV_KEY_LIBRARY
+  RC_BRANCH:
+    required: false
+    description: RC_BRANCH
 
 runs:
   using: "composite"
@@ -36,13 +39,6 @@ runs:
         cat ./library/requirements.txt >> requirements.txt
       shell: bash
 
-    - name: Find Latest Release Branch
-      id: release-branch-finder
-      uses: jsryudev/release-branch-finder@v0.1.0
-      with:
-        repo-token: ${{ inputs.GITHUB_TOKEN }}
-        release-branch-prefix: rc
-
     - name: Check Credentials and Project
       id: project_credential
       run: |
@@ -57,9 +53,7 @@ runs:
       shell: bash
 
     - name: Set Vars
-      run: |
-        echo "CURRENT_DATE=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_ENV
-        echo "BRANCH="$(echo ${{ steps.release-branch-finder.outputs.release-branch }} | cut -c 4-)"" >> $GITHUB_ENV
+      run: echo "CURRENT_DATE=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_ENV
       shell: bash
 
     - name: GAE Key
@@ -72,12 +66,12 @@ runs:
         if [[ (${{ inputs.DEPLOY_ENV }} == 'dev') ]]
         then
             echo "===========entrou if dev=========="
-            OLD_TAG=${{env.BRANCH}} 
+            OLD_TAG=${{ inputs.RC_BRANCH }}
             TAG="${OLD_TAG//./-}"
             retry -l -i=60s -c=3 gcloud -q --project=${{steps.project_credential.outputs.PROJECT}} app deploy app.${{ inputs.DEPLOY_ENV }}.yaml -v=$TAG --no-promote
         elif [[ (${{ inputs.DEPLOY_ENV }} == 'prod-atar') ]]
         then
-            OLD_TAG=${{env.BRANCH}} 
+            OLD_TAG=${{ inputs.RC_BRANCH }}
             TAG="${OLD_TAG//./-}"
             ${RETRY} gcloud -q --project=${{steps.project_credential.outputs.PROJECT}} app deploy app.${{ inputs.DEPLOY_ENV }}.yaml -v=$TAG --promote
         fi
@@ -109,7 +103,7 @@ runs:
       if: ${{ inputs.CREATE_RELEASE == 'true' }}
       run: |
         chown -R $(id -u):$(id -g) $PWD
-        ${RETRY} gh release upload ${{env.BRANCH}} ${{github.event.repository.name}}-${{env.BRANCH}}.tar.gz
+        ${RETRY} gh release upload ${{ inputs.RC_BRANCH }}${{github.event.repository.name}}-${{env.BRANCH}}.tar.gz
       shell: bash
 
     - name: Create PR to main
