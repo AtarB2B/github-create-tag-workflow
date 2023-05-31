@@ -49,7 +49,7 @@ runs:
 
         if [[ ($TAG != 'main') ]]
         then
-            echo "BRANCH="$(echo $TAG | cut -c 4-)"" >> $GITHUB_ENV
+            echo "BRANCH="$(echo ${{ env.TAG }} | cut -c 4-)"" >> $GITHUB_ENV
         fi
       shell: bash
 
