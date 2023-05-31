@@ -103,10 +103,10 @@ runs:
       with:
         tag_name: ${{env.BRANCH}}
         release_name: Release ${{env.BRANCH}}
-        commitish: ${{env.BRANCH}}
+        commitish: rc/${{env.BRANCH}}
         body: |
           Changes in this Release
-          - Release from: ${{env.BRANCH}}
+          - Release from: rc/${{env.BRANCH}}
           - Release date: ${{env.CURRENT_DATE}}
           - Commit: ${{github.sha}}
         draft: false
