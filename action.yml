@@ -25,23 +25,37 @@ runs:
     - name: Git checkout
       uses: actions/checkout@v3
 
-    - name: Update Library
-      run: |
-        echo "${{ inputs.SSH_PRIV_KEY_LIBRARY }}" > ssh-rsa.key
-        chmod 400 ssh-rsa.key
-        mkdir /root/.ssh && touch /root/.ssh/known_hosts
-        eval $(ssh-agent) && ssh-add ssh-rsa.key
-        ssh-keyscan -H github.com >> /root/.ssh/known_hosts
-        chmod +x ./update_library.sh && ./update_library.sh -b main
-        cat ./library/requirements.txt >> requirements.txt
-      shell: bash
-
-    - name: Find Latest Release Branch
-      id: release-branch-finder
-      uses: jsryudev/release-branch-finder@v0.1.0
+    # - name: Find Latest Release Branch
+    #   id: release-branch-finder
+    #   uses: jsryudev/release-branch-finder@v0.1.0
+    #   with:
+    #     repo-token: ${{ inputs.GITHUB_TOKEN }}
+    #     release-branch-prefix: rc
+    
+    # criar if para validar nome da branch, if branch = main buscar ultima tag
+    - name: Get latest release
+      id: latest_release
+      if: ${{ startsWith(github.ref, 'refs/heads/main') }}
+      uses: kaliber5/action-get-release@v1
       with:
-        repo-token: ${{ inputs.GITHUB_TOKEN }}
-        release-branch-prefix: rc
+        token: ${{ inputs.GITHUB_TOKEN }}
+        latest: true
+
+    - name: Set Vars
+      run: |
+        echo "TAG=${GITHUB_REF_NAME}" >> $GITHUB_ENV
+        echo "CURRENT_DATE=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_ENV
+        echo "BRANCH="$(echo ${{ steps.latest_release.outputs.tag_name }} | cut -c 4-)"" >> $GITHUB_ENV
+      shell: bash
+      # echo "BRANCH="$(echo ${{ steps.release-branch-finder.outputs.release-branch }} | cut -c 4-)"" >> $GITHUB_ENV
+
+    - name: Check Ref
+      run: |
+        if [[ ($TAG != 'main') ]]
+        then
+            echo "BRANCH="$(echo $TAG)"" >> $GITHUB_ENV
+        fi
+      shell: bash
 
     - name: Check Credentials and Project
       id: project_credential
@@ -55,31 +69,29 @@ runs:
             echo '::set-output name=CREDENTIALS::$ATAR_CREDENTIALS'
         fi
       shell: bash
+    
+    - name: Permissions
+      run: chown -R $(id -u):$(id -g) $PWD
+      shell: bash
 
-    - name: Set Vars
-      run: |
-        echo "CURRENT_DATE=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_ENV
-        echo "BRANCH="$(echo ${{ steps.release-branch-finder.outputs.release-branch }} | cut -c 4-)"" >> $GITHUB_ENV
+    - name: Upgrade wheel, setuptools, virtualenv
+      run: python2 --version; python2 -m pip install --upgrade pip wheel setuptools virtualenv
+      shell: bash
+
+    - name: Get SSH_KEY LIBS-BACKEND
+      run: echo "${{inputs.SSH_PRIV_KEY_LIBRARY}}" > ssh-rsa.key ; atar-cli deploy --set-ssh=ssh-rsa.key ; rm -f ssh-rsa.key
+      shell: bash
+
+    - name: Update Client/Update Third Party
+      run: atar-cli --update-all
       shell: bash
 
     - name: GAE Key
       run: |
+        OLD_TAG=${{env.BRANCH}} 
+        TAG="${OLD_TAG//./-}"
         echo ${{steps.project_credential.outputs.CREDENTIALS}}|gcloud auth activate-service-account --key-file=-
-      shell: bash
-
-    - name: Check Promote and GAE Deploy ${{github.event.repository.name}}
-      run: |
-        if [[ (${{ inputs.DEPLOY_ENV }} == 'dev') ]]
-        then
-            OLD_TAG=${{env.BRANCH}} 
-            TAG="${OLD_TAG//./-}"
-            retry -l -i=60s -c=3 gcloud -q --project=${{steps.project_credential.outputs.PROJECT}} app deploy app.${{ inputs.DEPLOY_ENV }}.yaml -v=$TAG --promote
-        elif [[ (${{ inputs.DEPLOY_ENV }} == 'prod-atar') ]]
-        then
-            OLD_TAG=${{env.BRANCH}} 
-            TAG="${OLD_TAG//./-}"
-            ${RETRY} gcloud -q --project=${{steps.project_credential.outputs.PROJECT}} app deploy app.${{ inputs.DEPLOY_ENV }}.yaml -v=$TAG --promote
-        fi
+        ${RETRY} gcloud -q --project=${{steps.project_credential.outputs.PROJECT}} app deploy app.yaml -v=$TAG --promote
       shell: bash
 
     - name: Create TAR release
