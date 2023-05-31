@@ -46,11 +46,7 @@ runs:
         echo "TAG=${GITHUB_REF_NAME}" >> $GITHUB_ENV
         echo "CURRENT_DATE=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_ENV
         echo "BRANCH="$(echo ${{ steps.latest_release.outputs.tag_name }} | cut -c 4-)"" >> $GITHUB_ENV
-      shell: bash
-      # echo "BRANCH="$(echo ${{ steps.release-branch-finder.outputs.release-branch }} | cut -c 4-)"" >> $GITHUB_ENV
 
-    - name: Check Ref
-      run: |
         if [[ ($TAG != 'main') ]]
         then
             echo "BRANCH="$(echo $TAG | cut -c 4-)"" >> $GITHUB_ENV
@@ -107,10 +103,10 @@ runs:
       with:
         tag_name: ${{env.BRANCH}}
         release_name: Release ${{env.BRANCH}}
-        commitish: ${{ steps.release-branch-finder.outputs.release-branch }}
+        commitish: ${{env.BRANCH}}
         body: |
           Changes in this Release
-          - Release from: ${{ steps.release-branch-finder.outputs.release-branch }}
+          - Release from: ${{env.BRANCH}}
           - Release date: ${{env.CURRENT_DATE}}
           - Commit: ${{github.sha}}
         draft: false
@@ -125,12 +121,12 @@ runs:
 
     - name: Create PR to main
       if: ${{ inputs.CREATE_RELEASE == 'true' }}
-      run: gh pr create --base=main --head=${{ steps.release-branch-finder.outputs.release-branch }} --title="[Release] version ${{ steps.release-branch-finder.outputs.release-branch }} to production" --body="Pull Request ${{ steps.release-branch-finder.outputs.release-branch }} to Production"
+      run: gh pr create --base=main --head=${{env.BRANCH}} --title="[Release] version ${{env.BRANCH}} to production" --body="Pull Request ${{env.BRANCH}} to Production"
       shell: bash
 
     - name: Delete RC Branch
       if: ${{ inputs.CREATE_RELEASE == 'false' }}
       run: |
         chown -R $(id -u):$(id -g) $PWD
-        git push origin --delete "${{ steps.release-branch-finder.outputs.release-branch }}"
+        git push origin --delete "${{env.BRANCH}}"
       shell: bash
