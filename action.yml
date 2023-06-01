@@ -79,7 +79,7 @@ runs:
         OLD_TAG=${{env.BRANCH}} 
         TAG="${OLD_TAG//./-}"
         echo ${{steps.project_credential.outputs.CREDENTIALS}}|gcloud auth activate-service-account --key-file=-
-        ${RETRY} gcloud -q --project=${{steps.project_credential.outputs.PROJECT}} app deploy app.yaml -v=$TAG --no-promote
+        ${RETRY} gcloud -q --project=${{steps.project_credential.outputs.PROJECT}} app deploy app.yaml -v=$TAG --promote
       shell: bash
 
     - name: GAE Key
@@ -88,7 +88,7 @@ runs:
         OLD_TAG=${{ steps.latest_release.outputs.tag_name }}
         TAG="${OLD_TAG//./-}"
         echo ${{steps.project_credential.outputs.CREDENTIALS}}|gcloud auth activate-service-account --key-file=-
-        ${RETRY} gcloud -q --project=${{steps.project_credential.outputs.PROJECT}} app deploy app.yaml -v=$TAG --no-promote
+        ${RETRY} gcloud -q --project=${{steps.project_credential.outputs.PROJECT}} app deploy app.yaml -v=$TAG --promote
       shell: bash
 
     - name: Create TAR release
