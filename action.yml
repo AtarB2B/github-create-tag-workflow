@@ -24,15 +24,7 @@ runs:
   steps:
     - name: Git checkout
       uses: actions/checkout@v3
-
-    # - name: Find Latest Release Branch
-    #   id: release-branch-finder
-    #   uses: jsryudev/release-branch-finder@v0.1.0
-    #   with:
-    #     repo-token: ${{ inputs.GITHUB_TOKEN }}
-    #     release-branch-prefix: rc
     
-    # criar if para validar nome da branch, if branch = main buscar ultima tag
     - name: Get latest release
       id: latest_release
       if: ${{ startsWith(github.ref, 'refs/heads/main') }}
