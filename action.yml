@@ -121,7 +121,7 @@ runs:
 
     - name: Create PR to main
       if: ${{ inputs.CREATE_RELEASE == 'true' }}
-      run: gh pr create --base=main --head=${{env.BRANCH}} --title="[Release] version ${{env.BRANCH}} to production" --body="Pull Request ${{env.BRANCH}} to Production"
+      run: gh pr create --base=main --head=rc/${{env.BRANCH}} --title="[Release] version ${{env.BRANCH}} to production" --body="Pull Request ${{env.BRANCH}} to Production"
       shell: bash
 
     - name: Delete RC Branch
