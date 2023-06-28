@@ -66,6 +66,7 @@ runs:
       id: split
       with:
         msg: '${{env.BRANCH}}'
+        separator: '/'
 
     - name: Check Promote and GAE Deploy ${{github.event.repository.name}}
       run: |
