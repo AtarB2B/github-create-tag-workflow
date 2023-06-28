@@ -54,6 +54,8 @@ runs:
 
     - name: Set Vars
       run: |
+        chown -R $(id -u):$(id -g) $PWD
+        git config --global --add safe.directory "*"
         echo "CURRENT_DATE=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_ENV
         echo "BRANCH=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_ENV
       shell: bash
