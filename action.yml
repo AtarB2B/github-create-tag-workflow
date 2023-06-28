@@ -18,18 +18,15 @@ inputs:
   SSH_PRIV_KEY_LIBRARY:
     required: true
     description: SSH_PRIV_KEY_LIBRARY
+  ORIGIN:
+    required: true
+    description: Origem
 
 runs:
   using: "composite"
   steps:
     - name: Git checkout
       uses: actions/checkout@v3
-
-    # - name: Show GitHub context   
-    #   env: 
-    #     GITHUB_CONTEXT: ${{ toJson(github) }}   
-    #   run: echo "$GITHUB_CONTEXT"
-    #   shell: bash
 
     - name: Update Library
       run: |
@@ -41,13 +38,6 @@ runs:
         chmod +x ./update_library.sh && ./update_library.sh -b main
         cat ./library/requirements.txt >> requirements.txt
       shell: bash
-
-    - name: Find Latest Release Branch
-      id: release-branch-finder
-      uses: jsryudev/release-branch-finder@v0.1.0
-      with:
-        repo-token: ${{ inputs.GITHUB_TOKEN }}
-        release-branch-prefix: rc
 
     - name: Check Credentials and Project
       id: project_credential
@@ -65,7 +55,7 @@ runs:
     - name: Set Vars
       run: |
         echo "CURRENT_DATE=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_ENV
-        echo "BRANCH="$(echo ${{ steps.release-branch-finder.outputs.release-branch }} | cut -c 4-)"" >> $GITHUB_ENV
+        echo "BRANCH=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_ENV
       shell: bash
 
     - name: GAE Key
@@ -101,10 +91,10 @@ runs:
       with:
         tag_name: ${{env.BRANCH}}
         release_name: Release ${{env.BRANCH}}
-        commitish: ${{ steps.release-branch-finder.outputs.release-branch }}
+        commitish: ${{env.BRANCH}}
         body: |
           Changes in this Release
-          - Release from: ${{ steps.release-branch-finder.outputs.release-branch }}
+          - Release from: ${{env.BRANCH}}
           - Release date: ${{env.CURRENT_DATE}}
           - Commit: ${{github.sha}}
         draft: false
@@ -117,14 +107,9 @@ runs:
         ${RETRY} gh release upload ${{env.BRANCH}} ${{github.event.repository.name}}-${{env.BRANCH}}.tar.gz
       shell: bash
 
-    # - name: Create PR to main
-    #   if: ${{ inputs.CREATE_RELEASE == 'true' }}
-    #   run: gh pr create --base=main --head=${{ steps.release-branch-finder.outputs.release-branch }} --title="[Release] version ${{ steps.release-branch-finder.outputs.release-branch }} to production" --body="Pull Request ${{ steps.release-branch-finder.outputs.release-branch }} to Production"
-    #   shell: bash
-
     - name: Delete RC Branch
       if: ${{ inputs.CREATE_RELEASE == 'true' }}
       run: |
         chown -R $(id -u):$(id -g) $PWD
-        git push origin --delete "${{ steps.release-branch-finder.outputs.release-branch }}"
+        git push origin --delete "${{env.BRANCH}}"
       shell: bash
