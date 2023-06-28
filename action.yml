@@ -72,7 +72,7 @@ runs:
       run: |
         if [[ (${{ inputs.DEPLOY_ENV }} == 'dev') ]]
         then
-            OLD_TAG=${{ steps.split.outputs._2 }}
+            OLD_TAG=${{ steps.split.outputs._1 }}
             TAG="${OLD_TAG//./-}"
             retry -l -i=60s -c=3 gcloud -q --project=${{steps.project_credential.outputs.PROJECT}} app deploy app.${{ inputs.DEPLOY_ENV }}.yaml -v=$TAG --promote
         elif [[ (${{ inputs.DEPLOY_ENV }} == 'prod-atar') ]]
