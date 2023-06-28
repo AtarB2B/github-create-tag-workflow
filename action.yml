@@ -112,9 +112,9 @@ runs:
         ${RETRY} gh release upload ${{env.BRANCH}} ${{github.event.repository.name}}-${{env.BRANCH}}.tar.gz
       shell: bash
 
-    - name: Delete RC Branch
-      if: ${{ inputs.CREATE_RELEASE == 'true' }}
-      run: |
-        chown -R $(id -u):$(id -g) $PWD
-        git push origin --delete "${{env.BRANCH}}"
-      shell: bash
+    # - name: Delete RC Branch
+    #   if: ${{ inputs.CREATE_RELEASE == 'true' }}
+    #   run: |
+    #     chown -R $(id -u):$(id -g) $PWD
+    #     git push origin --delete "${{env.BRANCH}}"
+    #   shell: bash
