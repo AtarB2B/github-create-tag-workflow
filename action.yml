@@ -49,12 +49,20 @@ runs:
         fi
       shell: bash
 
+    - name: Get latest release
+      id: latest_release
+      uses: kaliber5/action-get-release@v1
+      with:
+        token: ${{ inputs.GITHUB_TOKEN }}
+        latest: false
+        draft: true
+
     - name: Set Vars
       run: |
         chown -R $(id -u):$(id -g) $PWD
         git config --global --add safe.directory "*"
         echo "CURRENT_DATE=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_ENV
-        echo "BRANCH=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_ENV
+        echo "BRANCH=${{steps.latest_release.outputs.tag_name}}" >> $GITHUB_ENV
       shell: bash
 
     - name: GAE Key
@@ -62,17 +70,17 @@ runs:
         echo ${{steps.project_credential.outputs.CREDENTIALS}}|gcloud auth activate-service-account --key-file=-
       shell: bash
 
-    - uses: jungwinter/split@v2
-      id: split
-      with:
-        msg: '${{env.BRANCH}}'
-        separator: '/'
+    # - uses: jungwinter/split@v2
+    #   id: split
+    #   with:
+    #     msg: '${{env.BRANCH}}'
+    #     separator: '/'
 
     - name: Check Promote and GAE Deploy ${{github.event.repository.name}}
       run: |
         if [[ (${{ inputs.DEPLOY_ENV }} == 'dev') ]]
         then
-            OLD_TAG=${{ steps.split.outputs._1 }}
+            OLD_TAG=${{env.BRANCH}} 
             TAG="${OLD_TAG//./-}"
             retry -l -i=60s -c=3 gcloud -q --project=${{steps.project_credential.outputs.PROJECT}} app deploy app.${{ inputs.DEPLOY_ENV }}.yaml -v=$TAG --promote
         elif [[ (${{ inputs.DEPLOY_ENV }} == 'prod-atar') ]]
