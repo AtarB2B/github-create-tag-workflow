@@ -56,7 +56,7 @@ runs:
         token: ${{ inputs.GITHUB_TOKEN }}
         # latest: false
         draft: true
-        tag_name: v
+        tag_name: v7.3.0
 
     - name: Set Vars
       run: |
