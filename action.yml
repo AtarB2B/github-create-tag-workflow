@@ -67,19 +67,12 @@ runs:
         echo "prerelease: ${{ steps.last_release.outputs.prerelease }}"
       shell: bash
 
-    - name: Get latest release
-      id: latest_release
-      uses: kaliber5/action-get-release@v1
-      with:
-        token: ${{ inputs.GITHUB_TOKEN }}
-        latest: false
-
     - name: Set Vars
       run: |
         chown -R $(id -u):$(id -g) $PWD
         git config --global --add safe.directory "*"
         echo "CURRENT_DATE=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_ENV
-        echo "BRANCH=${{steps.latest_release.outputs.tag_name}}" >> $GITHUB_ENV
+        echo "BRANCH=${{ steps.last_release.outputs.tag_name }}" >> $GITHUB_ENV
       shell: bash
 
     - name: GAE Key
