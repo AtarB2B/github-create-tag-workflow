@@ -54,9 +54,7 @@ runs:
       uses: kaliber5/action-get-release@v1
       with:
         token: ${{ inputs.GITHUB_TOKEN }}
-        # latest: false
-        draft: true
-        tag_name: v7.3.0
+        latest: false
 
     - name: Set Vars
       run: |
