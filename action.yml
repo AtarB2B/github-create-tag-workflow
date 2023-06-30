@@ -55,6 +55,12 @@ runs:
         exclude_types: "release|prerelease"
         view_top: 1000
     
+    - name: "Set tag draft"
+      if: ${{ inputs.CREATE_RELEASE == 'false' }}
+      run: |
+        echo "BRANCH=${{ steps.last_draft.outputs.tag_name }}" >> $GITHUB_ENV
+      shell: bash
+    
     - name: "RELEASE"
       if: ${{ inputs.CREATE_RELEASE == 'true' }}
       id: last_release
@@ -63,25 +69,11 @@ runs:
         myToken: ${{env.GITHUB_TOKEN}}
         exclude_types: "draft|prerelease"
         view_top: 1000
-
-    - name: Check releases
-      id: check_releases
+    
+    - name: "Set tag release"
+      if: ${{ inputs.CREATE_RELEASE == 'true' }}
       run: |
-        draft=${{ steps.last_draft.outputs.draft }}
-        release=${{ steps.last_release.outputs.draft }}
-
-        if [ -z $draft ]; then
-            draft=""
-
-        if [ -z $release ]; then
-            release=""
-
-        if [ $draft == 'true' ]; then
-            echo "BRANCH=${{ steps.last_draft.outputs.tag_name }}" >> $GITHUB_ENV
-        
-        if [ $release == 'false' ]; then
-            echo "BRANCH=${{ steps.last_release.outputs.tag_name }}" >> $GITHUB_ENV
-        
+        echo "BRANCH=${{ steps.last_release.outputs.tag_name }}" >> $GITHUB_ENV
       shell: bash
 
     - name: Set Vars
