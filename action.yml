@@ -68,10 +68,13 @@ runs:
       id: check_releases
       run: |
         draft=${{ steps.last_draft.outputs.draft }}
-        draft=""
-        
         release=${{ steps.last_release.outputs.draft }}
-        release=""
+
+        if [ -z $draft ]; then
+            draft=""
+
+        if [ -z $release ]; then
+            release=""
 
         if [ $draft == 'true' ]; then
             echo "BRANCH=${{ steps.last_draft.outputs.tag_name }}" >> $GITHUB_ENV
