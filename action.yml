@@ -67,11 +67,15 @@ runs:
     - name: Check releases
       id: check_releases
       run: |
-        
-        if [ -n "${{ steps.last_draft.outputs.draft }}" ] && [ ${{ steps.last_draft.outputs.draft }} == 'true' ]; then
+        draft=""
+        draft=${{ steps.last_draft.outputs.draft }}
+        release=""
+        release=${{ steps.last_release.outputs.draft }}
+
+        if [ $draft == 'true' ]; then
             echo "BRANCH=${{ steps.last_draft.outputs.tag_name }}" >> $GITHUB_ENV
         
-        if [ -n "${{ steps.last_release.outputs.draft }}" ] && [ ${{ steps.last_release.outputs.draft }} == 'false' ]; then
+        if [ $release == 'false' ]; then
             echo "BRANCH=${{ steps.last_release.outputs.tag_name }}" >> $GITHUB_ENV
         
       shell: bash
