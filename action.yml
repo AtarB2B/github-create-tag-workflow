@@ -67,7 +67,7 @@ runs:
     - name: Check releases
       id: check_releases
       run: |
-        if [[ (${{ steps.last_draft.outputs.draft }}" == 'true') ]]
+        if [[ (${{ steps.last_draft.outputs.draft }} == 'true') ]]
         then
           echo "BRANCH=${{ steps.last_draft.outputs.tag_name }}" >> $GITHUB_ENV
         elif [[ (${{ steps.last_release.outputs.draft }} == 'false') ]]
