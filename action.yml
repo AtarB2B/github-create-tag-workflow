@@ -9,9 +9,6 @@ inputs:
   GITHUB_TOKEN:
     required: true
     description: Github Token
-  SVC_NAME:
-    required: true
-    description: Service Name
   CREATE_RELEASE:
     required: true
     description: Create Release and Tag - Github
