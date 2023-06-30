@@ -46,22 +46,34 @@ runs:
         fi
       shell: bash
 
-    - name: "call action"
+    - name: "DRAFT"
+      if: ${{ inputs.CREATE_RELEASE == 'false' }}
+      id: last_draft
+      uses: InsonusK/get-latest-release@v1.0.1
+      with:
+        myToken: ${{env.GITHUB_TOKEN}}
+        exclude_types: "release|prerelease"
+        view_top: 1000
+    
+    - name: "RELEASE"
+      if: ${{ inputs.CREATE_RELEASE == 'true' }}
       id: last_release
       uses: InsonusK/get-latest-release@v1.0.1
       with:
-        myToken: ${{ inputs.GITHUB_TOKEN }}
-        exclude_types: "release"
-        view_top: 1
-    
-    - name: "Print result"
+        myToken: ${{env.GITHUB_TOKEN}}
+        exclude_types: "draft|prerelease"
+        view_top: 1000
+
+    - name: Check releases
+      id: check_releases
       run: |
-        echo "id: ${{ steps.last_release.outputs.id }}"
-        echo "name: ${{ steps.last_release.outputs.name }}"
-        echo "tag_name: ${{ steps.last_release.outputs.tag_name }}"
-        echo "created_at: ${{ steps.last_release.outputs.created_atd }}"
-        echo "draft: ${{ steps.last_release.outputs.draft }}"
-        echo "prerelease: ${{ steps.last_release.outputs.prerelease }}"
+        if [[ (${{ steps.last_draft.outputs.draft }}" == 'true') ]]
+        then
+          echo "BRANCH=${{ steps.last_draft.outputs.tag_name }}" >> $GITHUB_ENV
+        elif [[ (${{ steps.last_release.outputs.draft }} == 'false') ]]
+        then
+          echo "BRANCH=${{ steps.last_release.outputs.tag_name }}" >> $GITHUB_ENV
+        fi
       shell: bash
 
     - name: Set Vars
@@ -69,7 +81,6 @@ runs:
         chown -R $(id -u):$(id -g) $PWD
         git config --global --add safe.directory "*"
         echo "CURRENT_DATE=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_ENV
-        echo "BRANCH=${{ steps.last_release.outputs.tag_name }}" >> $GITHUB_ENV
       shell: bash
 
     - name: GAE Key
@@ -104,21 +115,29 @@ runs:
         atar-cli --tar -n=${{github.event.repository.name}}-${{env.BRANCH}}
       shell: bash
 
-    - name: Create GH Release
+    # - name: Create GH Release
+    #   if: ${{ inputs.CREATE_RELEASE == 'true' }}
+    #   id: create_release
+    #   uses: actions/create-release@v1
+    #   with:
+    #     tag_name: ${{env.BRANCH}}
+    #     release_name: Release ${{env.BRANCH}}
+    #     # commitish: ${{env.BRANCH}}
+    #     body: |
+    #       Changes in this Release
+    #       - Release from: ${{env.BRANCH}}
+    #       - Release date: ${{env.CURRENT_DATE}}
+    #       - Commit: ${{github.sha}}
+    #     draft: false
+    #     prerelease: false
+
+    - name: Update GH Release
       if: ${{ inputs.CREATE_RELEASE == 'true' }}
-      id: create_release
-      uses: actions/create-release@v1
-      with:
-        tag_name: ${{env.BRANCH}}
-        release_name: Release ${{env.BRANCH}}
-        # commitish: ${{env.BRANCH}}
-        body: |
-          Changes in this Release
-          - Release from: ${{env.BRANCH}}
-          - Release date: ${{env.CURRENT_DATE}}
-          - Commit: ${{github.sha}}
-        draft: false
-        prerelease: false
+      run: |
+        chown -R $(id -u):$(id -g) $PWD
+        ${RETRY} gh release edit ${{env.BRANCH}} --draft=false
+        ${RETRY} gh release edit ${{env.BRANCH}} --prerelease=false
+      shell: bash
 
     - name: Upload Release Asset
       if: ${{ inputs.CREATE_RELEASE == 'true' }}
