@@ -45,24 +45,8 @@ runs:
             echo '::set-output name=CREDENTIALS::$ATAR_CREDENTIALS'
         fi
       shell: bash
-
-    # - name: "DRAFT"
-    #   if: ${{ inputs.CREATE_RELEASE == 'false' }}
-    #   id: last_draft
-    #   uses: InsonusK/get-latest-release@v1.0.1
-    #   with:
-    #     myToken: ${{env.GITHUB_TOKEN}}
-    #     exclude_types: "release|prerelease"
-    #     view_top: 1000
-    
-    # - name: "Set tag draft"
-    #   if: ${{ inputs.CREATE_RELEASE == 'false' }}
-    #   run: |
-    #     echo "BRANCH=${{ steps.last_draft.outputs.tag_name }}" >> $GITHUB_ENV
-    #   shell: bash
     
     - name: "PRERELEASE"
-      if: ${{ inputs.CREATE_RELEASE == 'true' }}
       id: last_prerelease
       uses: InsonusK/get-latest-release@v1.0.1
       with:
@@ -71,7 +55,6 @@ runs:
         view_top: 1000
     
     - name: "Set tag release"
-      if: ${{ inputs.CREATE_RELEASE == 'true' }}
       run: |
         echo "BRANCH=${{ steps.last_prerelease.outputs.tag_name }}" >> $GITHUB_ENV
       shell: bash
