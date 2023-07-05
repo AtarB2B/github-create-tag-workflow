@@ -46,34 +46,34 @@ runs:
         fi
       shell: bash
 
-    - name: "DRAFT"
-      if: ${{ inputs.CREATE_RELEASE == 'false' }}
-      id: last_draft
-      uses: InsonusK/get-latest-release@v1.0.1
-      with:
-        myToken: ${{env.GITHUB_TOKEN}}
-        exclude_types: "release|prerelease"
-        view_top: 1000
+    # - name: "DRAFT"
+    #   if: ${{ inputs.CREATE_RELEASE == 'false' }}
+    #   id: last_draft
+    #   uses: InsonusK/get-latest-release@v1.0.1
+    #   with:
+    #     myToken: ${{env.GITHUB_TOKEN}}
+    #     exclude_types: "release|prerelease"
+    #     view_top: 1000
     
-    - name: "Set tag draft"
-      if: ${{ inputs.CREATE_RELEASE == 'false' }}
-      run: |
-        echo "BRANCH=${{ steps.last_draft.outputs.tag_name }}" >> $GITHUB_ENV
-      shell: bash
+    # - name: "Set tag draft"
+    #   if: ${{ inputs.CREATE_RELEASE == 'false' }}
+    #   run: |
+    #     echo "BRANCH=${{ steps.last_draft.outputs.tag_name }}" >> $GITHUB_ENV
+    #   shell: bash
     
-    - name: "RELEASE"
+    - name: "PRERELEASE"
       if: ${{ inputs.CREATE_RELEASE == 'true' }}
-      id: last_release
+      id: last_prerelease
       uses: InsonusK/get-latest-release@v1.0.1
       with:
         myToken: ${{env.GITHUB_TOKEN}}
-        exclude_types: "draft|prerelease"
+        exclude_types: "draft|release"
         view_top: 1000
     
     - name: "Set tag release"
       if: ${{ inputs.CREATE_RELEASE == 'true' }}
       run: |
-        echo "BRANCH=${{ steps.last_release.outputs.tag_name }}" >> $GITHUB_ENV
+        echo "BRANCH=${{ steps.last_prerelease.outputs.tag_name }}" >> $GITHUB_ENV
       shell: bash
 
     - name: Set Vars
@@ -87,12 +87,6 @@ runs:
       run: |
         echo ${{steps.project_credential.outputs.CREDENTIALS}}|gcloud auth activate-service-account --key-file=-
       shell: bash
-
-    # - uses: jungwinter/split@v2
-    #   id: split
-    #   with:
-    #     msg: '${{env.BRANCH}}'
-    #     separator: '/'
 
     - name: Check Promote and GAE Deploy ${{github.event.repository.name}}
       run: |
