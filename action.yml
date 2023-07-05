@@ -131,6 +131,7 @@ runs:
         chown -R $(id -u):$(id -g) $PWD
         ${RETRY} gh release edit ${{env.BRANCH}} --draft=false
         ${RETRY} gh release edit ${{env.BRANCH}} --prerelease=false
+        ${RETRY} gh release edit ${{env.BRANCH}} --latest=true
       shell: bash
 
     - name: Upload Release Asset
