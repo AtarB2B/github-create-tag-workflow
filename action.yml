@@ -26,6 +26,7 @@ runs:
       uses: actions/checkout@v3
 
     - name: "PRERELEASE"
+      if: ${{ inputs.CREATE_RELEASE == 'true' }}
       id: last_prerelease
       uses: InsonusK/get-latest-release@v1.0.1
       with:
@@ -33,9 +34,25 @@ runs:
         exclude_types: "draft|release"
         view_top: 1000
     
-    - name: "Set tag release"
+    - name: "Set tag prerelease"
+      if: ${{ inputs.CREATE_RELEASE == 'true' }}
       run: |
         echo "BRANCH=${{ steps.last_prerelease.outputs.tag_name }}" >> $GITHUB_ENV
+      shell: bash
+
+    - name: "RELEASE"
+      if: ${{ inputs.CREATE_RELEASE == 'false' }}
+      id: last_release
+      uses: InsonusK/get-latest-release@v1.0.1
+      with:
+        myToken: ${{env.GITHUB_TOKEN}}
+        exclude_types: "draft|prerelease"
+        view_top: 1000
+
+    - name: "Set tag release"
+      if: ${{ inputs.CREATE_RELEASE == 'false' }}
+      run: |
+        echo "BRANCH=${{ steps.last_release.outputs.tag_name }}" >> $GITHUB_ENV
       shell: bash
 
     - name: Check Credentials and Project
