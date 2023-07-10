@@ -108,21 +108,30 @@ runs:
         atar-cli --tar -n=${{github.event.repository.name}}-${{env.BRANCH}}
       shell: bash
 
-    - name: Create GH Release
+    # - name: Create GH Release
+    #   if: ${{ inputs.CREATE_RELEASE == 'true' }}
+    #   id: create_release
+    #   uses: actions/create-release@v1
+    #   with:
+    #     tag_name: ${{env.BRANCH}}
+    #     release_name: Release "${{env.BRANCH}}
+    #     commitish: ${{ steps.release-branch-finder.outputs.release-branch }}
+    #     body: |
+    #       Changes in this Release
+    #       - Release from: ${{ steps.release-branch-finder.outputs.release-branch }}
+    #       - Release date: ${{env.CURRENT_DATE}}
+    #       - Commit: ${{github.sha}}
+    #     draft: false
+    #     prerelease: false
+
+    - name: Update GH Release
       if: ${{ inputs.CREATE_RELEASE == 'true' }}
-      id: create_release
-      uses: actions/create-release@v1
-      with:
-        tag_name: ${{env.BRANCH}}
-        release_name: Release "${{env.BRANCH}}
-        commitish: ${{ steps.release-branch-finder.outputs.release-branch }}
-        body: |
-          Changes in this Release
-          - Release from: ${{ steps.release-branch-finder.outputs.release-branch }}
-          - Release date: ${{env.CURRENT_DATE}}
-          - Commit: ${{github.sha}}
-        draft: false
-        prerelease: false
+      run: |
+        chown -R $(id -u):$(id -g) $PWD
+        ${RETRY} gh release edit ${{env.BRANCH}} --draft=false
+        ${RETRY} gh release edit ${{env.BRANCH}} --prerelease=false
+        ${RETRY} gh release edit ${{env.BRANCH}} --latest=true
+      shell: bash
 
     - name: Upload Release Asset
       if: ${{ inputs.CREATE_RELEASE == 'true' }}
@@ -131,14 +140,14 @@ runs:
         ${RETRY} gh release upload ${{env.BRANCH}} ${{github.event.repository.name}}-${{env.BRANCH}}.tar.gz
       shell: bash
 
-    - name: Create PR to main
-      if: ${{ inputs.CREATE_RELEASE == 'true' }}
-      run: gh pr create --base=main --head=${{ steps.release-branch-finder.outputs.release-branch }} --title="[Release] version ${{ steps.release-branch-finder.outputs.release-branch }} to production" --body="Pull Request ${{ steps.release-branch-finder.outputs.release-branch }} to Production"
-      shell: bash
+    # - name: Create PR to main
+    #   if: ${{ inputs.CREATE_RELEASE == 'true' }}
+    #   run: gh pr create --base=main --head=${{ steps.release-branch-finder.outputs.release-branch }} --title="[Release] version ${{ steps.release-branch-finder.outputs.release-branch }} to production" --body="Pull Request ${{ steps.release-branch-finder.outputs.release-branch }} to Production"
+    #   shell: bash
     
-    - name: Delete RC Branch
-      if: ${{ inputs.CREATE_RELEASE == 'false' }}
-      run: |
-        chown -R $(id -u):$(id -g) $PWD
-        git push origin --delete "${{ steps.release-branch-finder.outputs.release-branch }}"
-      shell: bash
+    # - name: Delete RC Branch
+    #   if: ${{ inputs.CREATE_RELEASE == 'false' }}
+    #   run: |
+    #     chown -R $(id -u):$(id -g) $PWD
+    #     git push origin --delete "${{ steps.release-branch-finder.outputs.release-branch }}"
+    #   shell: bash
