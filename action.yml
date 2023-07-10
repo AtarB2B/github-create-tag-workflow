@@ -50,7 +50,7 @@ runs:
       shell: bash
     
     - name: "PRERELEASE"
-      if: ${{ inputs.CREATE_RELEASE == 'true' }}
+      if: ${{ inputs.CREATE_RELEASE == 'prerelease' }}
       id: last_prerelease
       uses: InsonusK/get-latest-release@v1.0.1
       with:
@@ -59,13 +59,13 @@ runs:
         view_top: 1000
     
     - name: "Set tag release"
-      if: ${{ inputs.CREATE_RELEASE == 'true' }}
+      if: ${{ inputs.CREATE_RELEASE == 'prerelease' }}
       run: |
         echo "BRANCH=${{ steps.last_prerelease.outputs.tag_name }}" >> $GITHUB_ENV
       shell: bash
 
     - name: "RELEASE"
-      if: ${{ inputs.CREATE_RELEASE == 'false' }}
+      if: ${{ inputs.CREATE_RELEASE == 'release' }}
       id: last_release
       uses: InsonusK/get-latest-release@v1.0.1
       with:
@@ -74,7 +74,7 @@ runs:
         view_top: 1000
 
     - name: "Set tag release"
-      if: ${{ inputs.CREATE_RELEASE == 'false' }}
+      if: ${{ inputs.CREATE_RELEASE == 'release' }}
       run: |
         echo "BRANCH=${{ steps.last_release.outputs.tag_name }}" >> $GITHUB_ENV
       shell: bash
