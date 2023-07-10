@@ -50,7 +50,6 @@ runs:
       shell: bash
     
     - name: "PRERELEASE"
-      if: ${{ inputs.CREATE_RELEASE == 'prerelease' }}
       id: last_prerelease
       uses: InsonusK/get-latest-release@v1.0.1
       with:
@@ -59,13 +58,21 @@ runs:
         view_top: 1000
     
     - name: "Set tag release"
-      if: ${{ inputs.CREATE_RELEASE == 'prerelease' }}
       run: |
         echo "BRANCH=${{ steps.last_prerelease.outputs.tag_name }}" >> $GITHUB_ENV
       shell: bash
 
+    - name: Update GH Release
+      if: ${{ inputs.DEPLOY_ENV == 'prod-atar' && inputs.CREATE_RELEASE == 'true' }}
+      run: |
+        chown -R $(id -u):$(id -g) $PWD
+        ${RETRY} gh release edit ${{env.BRANCH}} --draft=false
+        ${RETRY} gh release edit ${{env.BRANCH}} --prerelease=false
+        ${RETRY} gh release edit ${{env.BRANCH}} --latest=true
+      shell: bash
+
     - name: "RELEASE"
-      if: ${{ inputs.CREATE_RELEASE == 'release' }}
+      if: ${{ inputs.DEPLOY_ENV == 'prod-atar' && inputs.CREATE_RELEASE == 'true' }}
       id: last_release
       uses: InsonusK/get-latest-release@v1.0.1
       with:
@@ -74,7 +81,7 @@ runs:
         view_top: 1000
 
     - name: "Set tag release"
-      if: ${{ inputs.CREATE_RELEASE == 'release' }}
+      if: ${{ inputs.DEPLOY_ENV == 'prod-atar' && inputs.CREATE_RELEASE == 'true' }}
       run: |
         echo "BRANCH=${{ steps.last_release.outputs.tag_name }}" >> $GITHUB_ENV
       shell: bash
@@ -112,41 +119,9 @@ runs:
         atar-cli --tar -n=${{github.event.repository.name}}-${{env.BRANCH}}
       shell: bash
 
-    # - name: Create GH Release
-    #   if: ${{ inputs.CREATE_RELEASE == 'true' }}
-    #   id: create_release
-    #   uses: actions/create-release@v1
-    #   with:
-    #     tag_name: ${{env.BRANCH}}
-    #     release_name: Release ${{env.BRANCH}}
-    #     # commitish: ${{env.BRANCH}}
-    #     body: |
-    #       Changes in this Release
-    #       - Release from: ${{env.BRANCH}}
-    #       - Release date: ${{env.CURRENT_DATE}}
-    #       - Commit: ${{github.sha}}
-    #     draft: false
-    #     prerelease: false
-
-    - name: Update GH Release
-      if: ${{ inputs.CREATE_RELEASE == 'true' }}
-      run: |
-        chown -R $(id -u):$(id -g) $PWD
-        ${RETRY} gh release edit ${{env.BRANCH}} --draft=false
-        ${RETRY} gh release edit ${{env.BRANCH}} --prerelease=false
-        ${RETRY} gh release edit ${{env.BRANCH}} --latest=true
-      shell: bash
-
     - name: Upload Release Asset
       if: ${{ inputs.CREATE_RELEASE == 'true' }}
       run: |
         chown -R $(id -u):$(id -g) $PWD
         ${RETRY} gh release upload ${{env.BRANCH}} ${{github.event.repository.name}}-${{env.BRANCH}}.tar.gz
       shell: bash
-
-    # - name: Delete RC Branch
-    #   if: ${{ inputs.CREATE_RELEASE == 'true' }}
-    #   run: |
-    #     chown -R $(id -u):$(id -g) $PWD
-    #     git push origin --delete "${{env.BRANCH}}"
-    #   shell: bash
