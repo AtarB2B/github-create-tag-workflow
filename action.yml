@@ -24,25 +24,6 @@ runs:
   steps:
     - name: Git checkout
       uses: actions/checkout@v3
-    
-    - name: Get latest release
-      id: latest_release
-      if: ${{ startsWith(github.ref, 'refs/heads/main') }}
-      uses: kaliber5/action-get-release@v1
-      with:
-        token: ${{ inputs.GITHUB_TOKEN }}
-        latest: true
-
-    - name: Set Vars
-      run: |
-        echo "CURRENT_DATE=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_ENV
-        echo "BRANCH="$(echo ${{ steps.latest_release.outputs.tag_name }})"" >> $GITHUB_ENV
-
-        if [[ (${GITHUB_REF_NAME} != 'main') ]]
-        then
-            echo "BRANCH="$(echo ${GITHUB_REF_NAME} | cut -c 4-)"" >> $GITHUB_ENV
-        fi
-      shell: bash
 
     - name: Check Credentials and Project
       id: project_credential
@@ -56,9 +37,49 @@ runs:
             echo '::set-output name=CREDENTIALS::$ATAR_CREDENTIALS'
         fi
       shell: bash
+
+    - name: "PRERELEASE"
+      id: last_prerelease
+      uses: InsonusK/get-latest-release@v1.0.1
+      with:
+        myToken: ${{env.GITHUB_TOKEN}}
+        exclude_types: "draft|release"
+        view_top: 1000
     
-    - name: Permissions
-      run: chown -R $(id -u):$(id -g) $PWD
+    - name: "Set tag release"
+      run: |
+        echo "BRANCH=${{ steps.last_prerelease.outputs.tag_name }}" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Update GH Release
+      if: ${{ inputs.DEPLOY_ENV == 'prod-atar' && inputs.CREATE_RELEASE == 'true' }}
+      run: |
+        chown -R $(id -u):$(id -g) $PWD
+        ${RETRY} gh release edit ${{env.BRANCH}} --draft=false
+        ${RETRY} gh release edit ${{env.BRANCH}} --prerelease=false
+        ${RETRY} gh release edit ${{env.BRANCH}} --latest=true
+      shell: bash
+
+    - name: "RELEASE"
+      if: ${{ inputs.DEPLOY_ENV == 'prod-atar' && inputs.CREATE_RELEASE == 'true' }}
+      id: last_release
+      uses: InsonusK/get-latest-release@v1.0.1
+      with:
+        myToken: ${{env.GITHUB_TOKEN}}
+        exclude_types: "draft|prerelease"
+        view_top: 1000
+
+    - name: "Set tag release"
+      if: ${{ inputs.DEPLOY_ENV == 'prod-atar' && inputs.CREATE_RELEASE == 'true' }}
+      run: |
+        echo "BRANCH=${{ steps.last_release.outputs.tag_name }}" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Set Vars
+      run: |
+        chown -R $(id -u):$(id -g) $PWD
+        git config --global --add safe.directory "*"
+        echo "CURRENT_DATE=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_ENV
       shell: bash
 
     - name: Upgrade wheel, setuptools, virtualenv
@@ -97,37 +118,9 @@ runs:
         atar-cli --tar -n=${{github.event.repository.name}}-${{env.BRANCH}}
       shell: bash
 
-    - name: Create GH Release
-      if: ${{ inputs.CREATE_RELEASE == 'true' }}
-      id: create_release
-      uses: actions/create-release@v1
-      with:
-        tag_name: ${{env.BRANCH}}
-        release_name: Release ${{env.BRANCH}}
-        commitish: rc/${{env.BRANCH}}
-        body: |
-          Changes in this Release
-          - Release from: rc/${{env.BRANCH}}
-          - Release date: ${{env.CURRENT_DATE}}
-          - Commit: ${{github.sha}}
-        draft: false
-        prerelease: false
-
     - name: Upload Release Asset
       if: ${{ inputs.CREATE_RELEASE == 'true' }}
       run: |
         chown -R $(id -u):$(id -g) $PWD
         ${RETRY} gh release upload ${{env.BRANCH}} ${{github.event.repository.name}}-${{env.BRANCH}}.tar.gz
-      shell: bash
-
-    - name: Create PR to main
-      if: ${{ inputs.CREATE_RELEASE == 'true' }}
-      run: gh pr create --base=main --head=rc/${{env.BRANCH}} --title="[Release] version ${{env.BRANCH}} to production" --body="Pull Request ${{env.BRANCH}} to Production"
-      shell: bash
-
-    - name: Delete RC Branch
-      if: ${{ inputs.CREATE_RELEASE == 'false' }}
-      run: |
-        chown -R $(id -u):$(id -g) $PWD
-        git push origin --delete "${{env.BRANCH}}"
       shell: bash
